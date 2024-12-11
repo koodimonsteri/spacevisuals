@@ -1,4 +1,5 @@
 #version 330 core
+#include "shaders/lygia/generative/snoise.glsl"
 in vec2 texCoords;
 out vec4 fragColor;
 

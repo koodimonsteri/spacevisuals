@@ -5,6 +5,8 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 import numpy as np
 import noise
 
+from shader import preprocess_shader
+
 # Window dimensions
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -75,8 +77,8 @@ def main():
     pygame.init()
     pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), DOUBLEBUF | OPENGL)
 
-    vertex_shader = open("shaders/vertex_shader.glsl", "r").read()
-    fragment_shader = open("shaders/fragment_shader.glsl", "r").read()
+    vertex_shader = preprocess_shader("shaders/vertex_shader.glsl")
+    fragment_shader = preprocess_shader("shaders/fragment_shader.glsl")
     shader = compileProgram(
         compileShader(vertex_shader, GL_VERTEX_SHADER),
         compileShader(fragment_shader, GL_FRAGMENT_SHADER)
