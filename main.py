@@ -75,8 +75,8 @@ def main():
     pygame.init()
     pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), DOUBLEBUF | OPENGL)
 
-    vertex_shader = open("vertex_shader.glsl", "r").read()
-    fragment_shader = open("fragment_shader.glsl", "r").read()
+    vertex_shader = open("shaders/vertex_shader.glsl", "r").read()
+    fragment_shader = open("shaders/fragment_shader.glsl", "r").read()
     shader = compileProgram(
         compileShader(vertex_shader, GL_VERTEX_SHADER),
         compileShader(fragment_shader, GL_FRAGMENT_SHADER)
