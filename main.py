@@ -102,7 +102,7 @@ def main():
             frame_count = 0
             fps_time = time.time()
         
-        clock.tick(60)
+        #clock.tick(60)
 
 
 if __name__ == "__main__":
