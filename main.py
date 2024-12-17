@@ -3,40 +3,17 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 import numpy as np
-import noise
+#import noise
+import time
+import logging
 
-from shader import preprocess_shader
 
-# Window dimensions
+from shader import check_program_link, check_shader_compile, preprocess_shader
+
+logger = logging.getLogger(__name__)
+
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-
-
-def generate_noise_texture(width, height, scale, time):
-    """Generate a 2D Perlin noise texture."""
-    texture = np.zeros((width, height, 3), dtype=np.float32)
-    for x in range(width):
-        for y in range(height):
-            value = noise.pnoise3(
-                x / scale, y / scale, time, octaves=6, persistence=0.5, lacunarity=2.0
-            )
-            value = (value + 1) / 2  # Normalize to 0-1
-            texture[x][y] = [
-                value * 0.5,  # Red channel
-                value * 0.8 * (1 - value),  # Green channel
-                value * 0.3  # Blue channel
-            ]
-    return texture
-
-
-def create_texture(texture_data):
-    """Create an OpenGL texture from numpy array."""
-    texture_id = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture_id)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_data.shape[0], texture_data.shape[1], 0, GL_RGB, GL_FLOAT, texture_data)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    return texture_id
 
 
 def create_quad_vao():
@@ -79,38 +56,55 @@ def main():
 
     vertex_shader = preprocess_shader("shaders/vertex_shader.glsl")
     fragment_shader = preprocess_shader("shaders/fragment_shader.glsl")
-    shader = compileProgram(
-        compileShader(vertex_shader, GL_VERTEX_SHADER),
-        compileShader(fragment_shader, GL_FRAGMENT_SHADER)
-    )
+    print(fragment_shader)
+    vertex_shader_obj = compileShader(vertex_shader, GL_VERTEX_SHADER)
+    fragment_shader_obj = compileShader(fragment_shader, GL_FRAGMENT_SHADER)
+
+    check_shader_compile(vertex_shader_obj, "Vertex Shader")
+    check_shader_compile(fragment_shader_obj, "Fragment Shader")
+
+    shader = compileProgram(vertex_shader_obj, fragment_shader_obj)
+    check_program_link(shader)
 
     glUseProgram(shader)
 
     quad_vao = create_quad_vao()
-    glEnable(GL_TEXTURE_2D)
 
     clock = pygame.time.Clock()
-    time = 0.0
-
+    frame_count = 0
+    start_time = time.time()
+    fps_time = start_time
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
                 return
 
-        noise_texture = generate_noise_texture(256, 256, 200.0, time)
-        texture_id = create_texture(noise_texture)
+        current_time = time.time()
+        delta = current_time - start_time
+        time_location = glGetUniformLocation(shader, "u_time")
+        if time_location == -1:
+            logger.error("Uniform 'u_time' not found in shader.")
+        else:
+            glUniform1f(time_location, delta)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glBindTexture(GL_TEXTURE_2D, texture_id)
         glBindVertexArray(quad_vao)
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
         pygame.display.flip()
 
-        glDeleteTextures([texture_id])
-
-        time += 0.005  # Slower animation
+        frame_count += 1
+        elapsed_time = time.time() - fps_time
+        if elapsed_time >= 1.0:
+            fps = frame_count / elapsed_time
+            logger.info("FPS: %.2f}", fps)
+            logger.info('current time: %s', current_time)
+            frame_count = 0
+            fps_time = time.time()
+        
         clock.tick(60)
 
+
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

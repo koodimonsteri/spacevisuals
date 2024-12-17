@@ -1,9 +1,13 @@
+import logging
+from pathlib import Path
+
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 
+logger = logging.getLogger(__name__)
 
-def read_shader_file(file_path):
+def read_shader_file(file_path: Path):
     try:
         with open(file_path, 'r') as file:
             return file.read()
@@ -56,12 +60,30 @@ def preprocess_shader(shader_path):
 
         include_file = shader_code[start_quote:end_quote]
         
-        include_path = os.path.join(os.path.dirname(shader_path), include_file)
+        #include_path = Path(shader_path) / include_file
+        include_path = Path(include_file)
         include_code = read_shader_file(include_path)
         
         shader_code = shader_code[:include_start] + include_code + shader_code[end_quote + 1:]
 
     return shader_code
+
+
+def check_shader_compile(shader, shader_type):
+    compile_status = glGetShaderiv(shader, GL_COMPILE_STATUS)
+    if not compile_status:
+        error_message = glGetShaderInfoLog(shader).decode('utf-8')
+        logger.error(f"Shader compile error ({shader_type}): {error_message}")
+    else:
+        logger.info(f"{shader_type} compiled successfully!")
+
+def check_program_link(program):
+    link_status = glGetProgramiv(program, GL_LINK_STATUS)
+    if not link_status:
+        error_message = glGetProgramInfoLog(program).decode('utf-8')
+        logger.error(f"Program link error: {error_message}")
+    else:
+        logger.info("Program linked successfully!")
 
 
 if __name__ == '__main__':

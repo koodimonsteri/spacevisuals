@@ -1,7 +1,7 @@
-#include "../math/mod289.glsl"
-#include "../math/permute.glsl"
-#include "../math/taylorInvSqrt.glsl"
-#include "../math/quintic.glsl"
+#include "shaders/lygia/math/mod289.glsl"
+#include "shaders/lygia/math/permute.glsl"
+#include "shaders/lygia/math/taylorInvSqrt.glsl"
+#include "shaders/lygia/math/quintic.glsl"
 
 /*
 contributors: [Stefan Gustavson, Ian McEwan]
